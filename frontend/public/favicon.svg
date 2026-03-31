@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+
+  <!-- White background for favicon use on black theme -->
+  <rect x="0" y="0" width="512" height="512" fill="#FFFFFF"/>
+
+  <!-- Icon circle - dark navy, large and centered -->
+  <circle cx="256" cy="256" r="220" fill="#1A1A2E"/>
+  <!-- Outer ring -->
+  <circle cx="256" cy="256" r="210" fill="none" stroke="white" stroke-width="4" opacity="0.25"/>
+
+  <!-- Screen frame - WHITE (large) -->
+  <rect x="148" y="172" width="216" height="152" rx="18" fill="none" stroke="white" stroke-width="9"/>
+
+  <!-- Dot accent top-left - WHITE -->
+  <circle cx="186" cy="208" r="18" fill="white" opacity="0.9"/>
+
+  <!-- Chart sparkline - WHITE -->
+  <polyline
+    points="156,300 186,268 216,282 248,248 278,264 312,228 356,244"
+    fill="none"
+    stroke="white"
+    stroke-width="9"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    opacity="0.85"/>
+
+  <!-- Stand neck -->
+  <rect x="242" y="326" width="28" height="30" rx="5" fill="white" opacity="0.4"/>
+  <!-- Stand base -->
+  <rect x="206" y="356" width="100" height="18" rx="9" fill="white" opacity="0.4"/>
+
+</svg>
