@@ -29,7 +29,7 @@ const ColorSchemaSelector = ({ value = "aurora", onChange }) => {
     setActivePreset(scheme.id);
     setIsCustom(false);
     setCustomColors([...scheme.colors]);
-    onChange?.({ type: "preset", id: scheme.id, colors: scheme.colors });
+    onChange?.(scheme.id);
   };
 
   const handleCustomColor = (index, color) => {
@@ -37,7 +37,7 @@ const ColorSchemaSelector = ({ value = "aurora", onChange }) => {
     updated[index] = color;
     setCustomColors(updated);
     setIsCustom(true);
-    onChange?.({ type: "custom", colors: updated });
+    // Skip object for backend string enum
   };
 
   return (

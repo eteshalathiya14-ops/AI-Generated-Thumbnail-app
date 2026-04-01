@@ -9,7 +9,7 @@ const { uploadImage } = require('../services/cloudinaryService');
 // POST /api/thumbnails/generate — Generate AI thumbnail
 exports.createThumbnail = async (req, res) => {
   try {
-    const { title, aspectRatio, style, colorScheme, additionalPrompt } = req.body;
+    const { title, aspectRatio, style, colorScheme, colorHex, additionalPrompt } = req.body;
     const userId = req.user._id;
 
     // Validation
@@ -24,7 +24,7 @@ exports.createThumbnail = async (req, res) => {
     }
 
     // 1. Build AI prompt
-    const prompt = buildPrompt({ title, aspectRatio, style, colorScheme, additionalPrompt });
+    const prompt = buildPrompt({ title, aspectRatio, style, colorScheme, colorHex, additionalPrompt });
 
     // 2. Generate image with OpenAI + HF fallback
     const base64Image = await generateImage(prompt, aspectRatio);

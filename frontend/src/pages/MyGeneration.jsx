@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import SoftBackdrop from '../components/SoftBackdrop'
-import { ArrowUpRightIcon, DownloadIcon, Link, TrashIcon } from 'lucide-react'
+import { ArrowUpRightIcon, DownloadIcon, TrashIcon, AlertCircle } from 'lucide-react'
 
 const MyGeneration = () => {
 
@@ -10,55 +10,95 @@ const MyGeneration = () => {
     '9:16': 'aspect-[9/16]',
   }
 
-  const [thumbnails, setThumbnail] = useState([ {
-    _id: '1',
-    title: 'Top 10 React Tips',
-    image_url: 'https://picsum.photos/seed/1/400/225',
-    aspectRatio: '16:9',
-    style: 'Bold & Graphic',
-    color_scheme: 'Vibrant',
-    aspect_ratio: '16:9',
-    isGenerating: false,
-    createdAt: new Date(),
-  },
-  {
-    _id: '2',
-    title: 'How to Learn JavaScript Fast',
-    image_url: 'https://picsum.photos/seed/2/400/225',
-    aspectRatio: '1:1',
-    style: 'Minimal',
-    color_scheme: 'Ocean',
-    aspect_ratio: '1:1',
-    isGenerating: false,
-    createdAt: new Date(),
-  },
-  {
-    _id: '3',
-    title: 'AI Tools 2025',
-    image_url: '',
-    aspectRatio: '9:16',
-    style: 'Cinematic',
-    color_scheme: 'Midnight',
-    aspect_ratio: '9:16',
-    isGenerating: true,
-    createdAt: new Date(),
-  },])
-  const [loading, setLoading] = useState(false)
+  const [thumbnails, setThumbnails] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const fetchThumbnail = async () => {
-    setLoading(false)
+  // Get token from localStorage (same as Generate.jsx)
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+
+  const API_BASE = 'http://localhost:5000/api/thumbnails'
+
+  const fetchThumbnails = async () => {
+    if (!token) {
+      setError('Please log in to view your thumbnails')
+      setLoading(false)
+      return
+    }
+
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await fetch(API_BASE, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch thumbnails')
+      }
+
+      // Map API response to component format (fix field names)
+      const mappedThumbnails = data.thumbnails.map(t => ({
+        _id: t._id,
+        title: t.title,
+        image_url: t.imageUrl,  // API uses imageUrl, component expects image_url
+        aspectRatio: t.aspectRatio,
+        style: t.style,
+        color_scheme: t.colorScheme || 'Default',  // API uses colorScheme
+        aspect_ratio: t.aspectRatio,
+        createdAt: t.createdAt,
+        isGenerating: false
+      }))
+
+      setThumbnails(mappedThumbnails)
+    } catch (err) {
+      console.error('Fetch thumbnails error:', err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDelete = async (id) => {
+    if (!token || !confirm('Are you sure you want to delete this thumbnail?')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete thumbnail')
+      }
+
+      // Refresh list
+      await fetchThumbnails()
+    } catch (err) {
+      console.error('Delete error:', err)
+      alert('Failed to delete: ' + err.message)
+    }
   }
 
   const handleDownload = (image_url) => {
-    window.open(image_url, '_blank')
-  }
-
-  const handelDelted = async (id) => {
-    console.log(id)
+    if (image_url) {
+      window.open(image_url, '_blank')
+    }
   }
 
   useEffect(() => {
-    fetchThumbnail()
+    fetchThumbnails()
   }, [])
 
   return (
@@ -70,6 +110,19 @@ const MyGeneration = () => {
           <p className='text-sm mt-1 text-zinc-400'>view and manage all your AI-generated thumbnails</p>
         </div>
 
+        {error && (
+          <div className='p-6 rounded-2xl bg-red/20 border border-red/30 text-red-100 max-w-md mx-auto'>
+            <AlertCircle className='w-6 h-6 mb-2 inline' />
+            {error}
+            <button 
+              onClick={fetchThumbnails}
+              className='mt-3 text-sm bg-red/50 hover:bg-red/70 px-4 py-1.5 rounded-lg text-red-100 transition-all'
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {loading && (
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
             {Array.from({ length: 6 }).map((_, i) => (
@@ -78,7 +131,7 @@ const MyGeneration = () => {
           </div>
         )}
 
-        {!loading && thumbnails.length === 0 && (
+        {!loading && !error && thumbnails.length === 0 && (
           <div className='text-center py-24'>
             <h3 className='text-lg font-semibold text-zinc-200'>No thumbnails yet</h3>
             <p className='text-sm text-zinc-400 mt-2'>Generate your first thumbnail to see it here</p>
@@ -114,8 +167,8 @@ const MyGeneration = () => {
                       className='absolute bottom-2 right-2 flex sm:hidden group-hover:flex gap-1.5'
                     >
                       <TrashIcon
-                        onClick={() => handelDelted(thumbnail._id)}
-                        className='size-7 bg-black/60 p-1.5 rounded-lg hover:bg-cyan-600 transition-all cursor-pointer text-white'
+                        onClick={() => handleDelete(thumbnail._id)}
+                        className='size-7 bg-black/60 p-1.5 rounded-lg hover:bg-red-600 transition-all cursor-pointer text-white'
                       />
                       <DownloadIcon
                         onClick={() => handleDownload(thumbnail.image_url)}
